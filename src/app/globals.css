@@ -1,0 +1,284 @@
+@import "tailwindcss";
+
+/* ── Design Tokens ──────────────────────────────────── */
+:root {
+  --primary: #135bec;
+  --primary-hover: #0e4fd4;
+  --bg: #f6f6f8;
+  --surface: #ffffff;
+  --surface-80: rgba(255,255,255,0.8);
+  --surface-95: rgba(255,255,255,0.95);
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --shadow-float: 0 4px 24px -4px rgba(0,0,0,0.08), 0 2px 8px -2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 40px -8px rgba(0,0,0,0.12);
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+/* ── Base ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Legacy arc-* tokens (used by ImageModal) ───────── */
+:root {
+  --arc-surface:       #ffffff;
+  --arc-border-light:  #e2e8f0;
+  --arc-secondary:     #64748b;
+  --arc-muted:         #94a3b8;
+  --arc-amber:         #135bec;
+}
+
+/* ── Material Symbols ───────────────────────────────── */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Dot grid canvas background ─────────────────────── */
+.bg-grid-pattern {
+  background-image: radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* ── Hide scrollbar ──────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Floating panel ──────────────────────────────────── */
+.ws-panel {
+  background: var(--surface-95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: var(--shadow-float);
+}
+
+/* ── Pill chip ───────────────────────────────────────── */
+.ws-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+}
+.ws-pill:hover {
+  background: #f1f5f9;
+  color: var(--text);
+}
+.ws-pill.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(19,91,236,0.25);
+}
+
+/* ── Bottom bar env pill ─────────────────────────────── */
+.env-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  color: var(--text-secondary);
+  background: transparent;
+}
+.env-pill:hover { color: var(--text); background: #f1f5f9; }
+.env-pill.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ── Generate button ─────────────────────────────────── */
+.btn-generate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(19,91,236,0.3);
+  transition: all 0.15s;
+}
+.btn-generate:hover { background: var(--primary-hover); box-shadow: 0 6px 20px rgba(19,91,236,0.4); }
+.btn-generate:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+/* ── Left toolbar button ─────────────────────────────── */
+.tool-btn {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.tool-btn:hover { background: #f1f5f9; color: #0f172a; }
+.tool-btn.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(19,91,236,0.3); }
+
+/* ── Tooltip ─────────────────────────────────────────── */
+.tool-btn .tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%; transform: translateY(-50%);
+  background: #0f172a;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.tool-btn:hover .tooltip { opacity: 1; }
+
+/* ── Canvas upload zone ──────────────────────────────── */
+.canvas-upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.5);
+}
+.canvas-upload-zone:hover {
+  border-color: var(--primary);
+  background: rgba(19,91,236,0.03);
+}
+
+/* ── Gallery image item ──────────────────────────────── */
+.gallery-item {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s;
+}
+.gallery-item:hover img { transform: scale(1.08); }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.gallery-item.selected { box-shadow: 0 0 0 2.5px var(--primary); }
+
+/* ── Merge / drop-on-drawing animations ─────────────── */
+@keyframes merge-glow {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(19,91,236,0.5), 0 0 20px rgba(19,91,236,0.2); }
+  50%       { box-shadow: 0 0 0 6px rgba(19,91,236,0.9), 0 0 48px rgba(19,91,236,0.4); }
+}
+@keyframes scan-line {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+.card-merge-active { animation: merge-glow 0.65s ease-in-out infinite; }
+.scan-line {
+  position: absolute; top: 0; bottom: 0; width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(19,91,236,0.35), transparent);
+  animation: scan-line 0.75s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Animations ──────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in { animation: fade-in 0.35s ease-out forwards; }
+
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin-slow 2s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.animate-pulse { animation: pulse-ring 1.5s ease-in-out infinite; }
+
+/* ── Hover-only border transitions ──────────────────── */
+.hover-border-primary {
+  border-color: #cbd5e1;
+  transition: border-color 0.15s, background 0.15s;
+}
+.hover-border-primary:hover {
+  border-color: #135bec;
+  background: rgba(19,91,236,0.03);
+}
+.hover-border-blue {
+  border-color: #e2e8f0;
+  transition: border-color 0.15s;
+}
+.hover-border-blue:hover { border-color: #135bec; }
+
+/* ── Range input ─────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(19,91,236,0.3);
+}
