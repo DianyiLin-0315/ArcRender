@@ -264,6 +264,39 @@ body {
 }
 .hover-border-blue:hover { border-color: #135bec; }
 
+/* ── Dark mode overrides ─────────────────────────────── */
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-80: rgba(30,41,59,0.8);
+  --surface-95: rgba(30,41,59,0.95);
+  --border: #334155;
+  --border-light: #334155;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --shadow-float: 0 4px 24px -4px rgba(0,0,0,0.4), 0 2px 8px -2px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 40px -8px rgba(0,0,0,0.5);
+}
+[data-theme="dark"] .ws-panel { border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .ws-pill:hover { background: #334155; color: #f1f5f9; }
+[data-theme="dark"] .env-pill:hover { background: #334155; color: #f1f5f9; }
+[data-theme="dark"] .env-pill.active { background: #334155; color: #f1f5f9; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+[data-theme="dark"] .tool-btn:hover { background: #334155; color: #f1f5f9; }
+[data-theme="dark"] .hover-border-primary { border-color: #334155; }
+[data-theme="dark"] .hover-border-primary:hover { border-color: #135bec; background: rgba(19,91,236,0.08); }
+[data-theme="dark"] .hover-border-blue { border-color: #334155; }
+[data-theme="dark"] input[type="range"] { background: #334155; }
+
+/* ── Top-right toggle button (language & dark mode) ──── */
+.ws-toggle-btn {
+  height: 34px; padding: 0 10px; border-radius: 9999px; border: none;
+  background: transparent; cursor: pointer;
+  font-size: 12px; font-weight: 700; color: var(--text-secondary);
+  display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+}
+.ws-toggle-btn:hover { background: var(--border-light); color: var(--text); }
+
 /* ── Range input ─────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
