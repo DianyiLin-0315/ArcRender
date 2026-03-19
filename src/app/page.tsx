@@ -121,8 +121,14 @@ function calcResultPos(drawingPos: { x: number; y: number }, i: number) {
 
 export default function Home() {
   const canvasRef       = useRef<HTMLDivElement>(null);
+  const dotCanvasRef    = useRef<HTMLCanvasElement>(null);
   const drawingInputRef = useRef<HTMLInputElement>(null);
   const imgCache        = useRef<Record<string, string>>({});
+  const mouseRef        = useRef({ x: -9999, y: -9999 });
+  const vtRef           = useRef({ x: 0, y: 0, scale: 1 });
+  const darkRef         = useRef(false);
+  const offsetMapRef    = useRef<Map<string, { ox: number; oy: number }>>(new Map());
+  const rafRef          = useRef<number>(0);
 
   const [vt, setVt]               = useState({ x: 0, y: 0, scale: 1 });
   const [drawingPos, setDrawingPos] = useState({ x: 0, y: -160 });
@@ -181,6 +187,112 @@ export default function Home() {
   );
 
   useEffect(() => { setVt(centerViewport()); }, []);
+
+  /* ── Sync refs ── */
+  useEffect(() => { vtRef.current = vt; }, [vt]);
+  useEffect(() => { darkRef.current = darkMode; }, [darkMode]);
+
+  /* ── Dot canvas animation loop ── */
+  useEffect(() => {
+    const canvas = dotCanvasRef.current;
+    if (!canvas) return;
+
+    const resize = () => {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const GRID     = 24;
+    const RADIUS   = 90;   // px, screen space
+    const STRENGTH = 32;   // max displacement px
+    const LERP     = 0.10;
+    const DOT_R    = 1.5;
+
+    const loop = () => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { rafRef.current = requestAnimationFrame(loop); return; }
+
+      const { x: tx, y: ty, scale } = vtRef.current;
+      const { x: mx, y: my } = mouseRef.current;
+      const dotColor = darkRef.current ? '#334155' : '#cbd5e1';
+      const step = GRID * scale;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const startCol = Math.floor(-tx / step) - 1;
+      const endCol   = Math.ceil((canvas.width  - tx) / step) + 1;
+      const startRow = Math.floor(-ty / step) - 1;
+      const endRow   = Math.ceil((canvas.height - ty) / step) + 1;
+
+      // Batch: undisplaced dots in one path
+      ctx.beginPath();
+      ctx.fillStyle = dotColor;
+
+      const displaced: Array<{ x: number; y: number }> = [];
+
+      for (let col = startCol; col <= endCol; col++) {
+        for (let row = startRow; row <= endRow; row++) {
+          const baseX = col * step + tx;
+          const baseY = row * step + ty;
+          const dist  = Math.hypot(mx - baseX, my - baseY);
+
+          // Target displacement
+          let tvx = 0, tvy = 0;
+          if (dist < RADIUS && dist > 1) {
+            const force = (1 - dist / RADIUS) * STRENGTH;
+            tvx = (baseX - mx) / dist * force;
+            tvy = (baseY - my) / dist * force;
+          }
+
+          const key = `${col},${row}`;
+          const entry = offsetMapRef.current.get(key);
+
+          if (!entry && tvx === 0 && tvy === 0) {
+            // No effect: draw immediately in batch
+            ctx.moveTo(baseX + DOT_R, baseY);
+            ctx.arc(baseX, baseY, DOT_R, 0, Math.PI * 2);
+            continue;
+          }
+
+          // Create or update entry
+          const e = entry ?? { ox: 0, oy: 0 };
+          if (!entry) offsetMapRef.current.set(key, e);
+
+          e.ox += (tvx - e.ox) * LERP;
+          e.oy += (tvy - e.oy) * LERP;
+
+          if (Math.abs(e.ox) < 0.05 && Math.abs(e.oy) < 0.05 && tvx === 0 && tvy === 0) {
+            offsetMapRef.current.delete(key);
+            ctx.moveTo(baseX + DOT_R, baseY);
+            ctx.arc(baseX, baseY, DOT_R, 0, Math.PI * 2);
+          } else {
+            displaced.push({ x: baseX + e.ox, y: baseY + e.oy });
+          }
+        }
+      }
+      ctx.fill();
+
+      // Draw displaced dots
+      if (displaced.length > 0) {
+        ctx.beginPath();
+        for (const d of displaced) {
+          ctx.moveTo(d.x + DOT_R, d.y);
+          ctx.arc(d.x, d.y, DOT_R, 0, Math.PI * 2);
+        }
+        ctx.fill();
+      }
+
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    rafRef.current = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
 
   useEffect(() => {
     const el = canvasRef.current; if (!el) return;
@@ -348,21 +460,22 @@ export default function Home() {
         ref={canvasRef}
         style={{ position: 'absolute', inset: 0, zIndex: 0, cursor: dragging ? 'grabbing' : 'grab', overflow: 'hidden' }}
         onMouseDown={e => startInteraction(e)}
-        onMouseMove={onMouseMove}
+        onMouseMove={e => {
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (rect) mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+          onMouseMove(e);
+        }}
         onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
+        onMouseLeave={() => { mouseRef.current = { x: -9999, y: -9999 }; onMouseUp(); }}
         onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleCanvasDrop}
       >
-        {/* Dot grid */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          backgroundImage: `radial-gradient(circle, ${C.dotColor} 1.5px, transparent 1.5px)`,
-          backgroundSize: `${24 * vt.scale}px ${24 * vt.scale}px`,
-          backgroundPosition: `${vt.x % (24 * vt.scale)}px ${vt.y % (24 * vt.scale)}px`,
-          opacity: 0.7,
-        }} />
+        {/* Dot grid canvas */}
+        <canvas
+          ref={dotCanvasRef}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', opacity: 0.7 }}
+        />
 
         {isDragOver && !isDragOverDrawing && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(19,91,236,0.04)', border: '2px dashed rgba(19,91,236,0.3)', pointerEvents: 'none', zIndex: 5 }} />
